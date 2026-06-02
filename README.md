@@ -134,6 +134,7 @@ Mooncake supports heterogeneous accelerators, NICs, and specialized transport pa
 | Vendor / Fabric | Hardware / Transport | Current support in Mooncake | How it is exposed |
 |-----------------|----------------------|-----------------------------|-------------------|
 | Alibaba Cloud | eRDMA NICs | Supported | `rdma` data path with eRDMA devices such as `erdma_0`; the build also enables `CONFIG_ERDMA` |
+| Sugon / TianLong | SHCA NICs | Supported | `-DUSE_SHCA=ON`; requires `shca-tools`; `MC_RPC_PROTOCOL=rdma` is not supported, store/RPC use TCP |
 | Standard RDMA ecosystem | InfiniBand / RoCE NICs | Supported | Available through the standard `rdma` protocol path with topology-aware NIC selection |
 | AWS | Elastic Fabric Adapter (EFA) | Supported | `-DUSE_EFA=ON`; EFA transport built on libfabric SRD |
 | Storage disaggregation | NVMe-oF | Supported | Enabled with `-DUSE_NVMEOF=ON` |
@@ -234,7 +235,7 @@ In the future, we will further improve TTFT through GPUDirect RDMA and zero-copy
 Mooncake is designed and optimized for high-speed RDMA networks. Though Mooncake supports TCP-only data transfer, we **strongly** recommend users to evaluate the functionality and performance of Mooncake with RDMA network support.
 
 The following need to be installed before running any component of Mooncake:
-- RDMA Driver & SDK, such as Mellanox OFED.
+- RDMA Driver & SDK, such as Mellanox OFED, or `shca-tools` on Sugon/TianLong SHCA systems (build with `-DUSE_SHCA=ON`).
 - Python 3.10, virtual environment is recommended.
 - CUDA 12.1 and above, including NVIDIA GPUDirect Storage Support, if the package is built with `-DUSE_CUDA` (disabled by default). *You may install them from [here](https://developer.nvidia.com/cuda-downloads)*.
 - Cambricon Neuware, if the package is built with `-DUSE_MLU`. By default Mooncake looks for Neuware under `NEUWARE_HOME` or `/usr/local/neuware`.
@@ -315,6 +316,7 @@ The following are additional dependencies for building Mooncake:
 - CUDA 12.1 and above, including NVIDIA GPUDirect Storage Support, if the package is built with `-DUSE_CUDA`. *This is NOT included in the `dependencies.sh` script. You may install them from [here](https://developer.nvidia.com/cuda-downloads)*.
 - Cambricon Neuware, if you want to build with `-DUSE_MLU`. *This is NOT included in the `dependencies.sh` script.* Mooncake resolves it from `NEUWARE_HOME` or `/usr/local/neuware` by default, and also supports overriding `MLU_INCLUDE_DIR` / `MLU_LIB_DIR` during CMake configure.
 - Hygon DTK SDK, if you want to build with `-DUSE_HYGON`. *This is NOT included in the `dependencies.sh` script.* Mooncake resolves it from `DTK_HOME` or `/opt/dtk` by default, and also supports overriding `DTK_INCLUDE_DIR` / `DTK_LIB_DIR` during CMake configure.
+- shca-tools, if you want to build with `-DUSE_SHCA=ON` on Sugon/TianLong SHCA systems. *Install separately before `dependencies.sh`.*
 - Iluvatar CoreX SDK, if you want to build with `-DUSE_COREX`. *This is NOT included in the `dependencies.sh` script.* Mooncake resolves it from `COREX_HOME` or `/usr/local/corex` by default, and also supports overriding `COREX_INCLUDE_DIR` / `COREX_LIB_DIR` during CMake configure.
 - [Optional] Rust Toolchain and libclang, if you want to build Transfer Engine Rust examples with `-DWITH_RUST_EXAMPLE=ON` or Mooncake Store Rust bindings with `-DWITH_STORE_RUST=ON`. *This is NOT included in the `dependencies.sh` script.*
 - [Optional] `hiredis`, if you want to build with `-DUSE_REDIS` to use Redis instead of etcd as metadata servers, or with `-DSTORE_USE_REDIS` to use Redis for Mooncake Store failover.

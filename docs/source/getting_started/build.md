@@ -231,6 +231,7 @@ The following options can be used during `cmake ..` to specify whether to compil
 - `-DMACA_LIB_DIR=/path/to/lib64`: Override MACA library directory when `-DUSE_MACA=ON`.
 - `-DMACA_RUNTIME_LIBS="mcruntime;mxc-runtime64;rt"`: Override MACA runtime libraries linked by `transfer_engine`.
 - `-DUSE_HIP=[ON|OFF]`: Enable AMD GPU support via HIP/ROCm
+- `-DUSE_SHCA=[ON|OFF]`: Enable Sugon/TianLong SHCA InfiniBand support. **Default: OFF.** `MC_RPC_PROTOCOL=rdma` is not supported on SHCA builds.
 - `-DUSE_HYGON=[ON|OFF]`: Enable Hygon DCU support via DTK SDK. **Default: OFF.** Uses CUDA-compatible runtime.
 - `-DDTK_ROOT=/path/to/dtk`: Override the default DTK SDK root used when `-DUSE_HYGON=ON`. If unset, Mooncake uses `DTK_HOME` or `/opt/dtk`.
 - `-DDTK_INCLUDE_DIR=/path/to/include`: Override the DTK include directory when `-DUSE_HYGON=ON`.
