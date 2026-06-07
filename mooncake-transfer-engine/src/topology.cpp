@@ -14,6 +14,7 @@
 
 #include <glog/logging.h>
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -142,10 +143,56 @@ struct InfinibandDevice {
     int numa_node;
 };
 
+static inline void ltrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+                return !std::isspace(ch);
+            }));
+}
+
+static inline void rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+                         [](unsigned char ch) { return !std::isspace(ch); })
+                .base(),
+            s.end());
+}
+
+static std::set<std::string> getIbvDeviceWhitelist() {
+    std::set<std::string> whitelist;
+    char *env = std::getenv("MC_TE_FILTERS");
+    if (!env || !*env) {
+        return whitelist;
+    }
+
+    LOG(INFO) << "IB device whitelist: " << env;
+    const char delimiter = ',';
+    char *end = env + std::strlen(env);
+    char *start = env;
+    char *pos = env;
+    while ((pos = std::find(start, end, delimiter)) != end) {
+        std::string token(start, pos);
+        ltrim(token);
+        rtrim(token);
+        if (!token.empty()) {
+            whitelist.insert(std::move(token));
+        }
+        start = pos + 1;
+    }
+    if (start != (end + 1)) {
+        std::string token(start, end);
+        ltrim(token);
+        rtrim(token);
+        if (!token.empty()) {
+            whitelist.insert(std::move(token));
+        }
+    }
+    return whitelist;
+}
+
 static std::vector<InfinibandDevice> listInfiniBandDevices(
     const std::vector<std::string> &filter) {
     int num_devices = 0;
     std::vector<InfinibandDevice> devices;
+    const auto whitelist = getIbvDeviceWhitelist();
 
     struct ibv_device **device_list = ibv_get_device_list(&num_devices);
     if (!device_list) {
@@ -163,6 +210,12 @@ static std::vector<InfinibandDevice> listInfiniBandDevices(
         if (!filter.empty() && std::find(filter.begin(), filter.end(),
                                          device_name) == filter.end())
             continue;
+
+        if (!whitelist.empty() &&
+            whitelist.find(device_name) == whitelist.end()) {
+            LOG(INFO) << "Skipping device: " << device_name;
+            continue;
+        }
 
         // Check device availability before adding to the list
         if (!isIbDeviceAvailable(device_list[i])) {
